@@ -5,6 +5,12 @@ This is a simple Apple Maps app to search for and save locations. The user can s
 Alerts are used to inform the user of adding locations and request confirmation for deleting. 
 
 
+### Preview
+<p align="center">
+    <img src = "https://github.com/getyarley/getyarley-images/blob/master/Maps-search-preview.gif?raw=true"/>
+</p>
+
+
 ## Setup
 
 No setup required.
