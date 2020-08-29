@@ -11,7 +11,7 @@ import MapKit
 import CoreLocation
 
 enum AlertType {
-    case added, duplicate
+    case added, duplicate, delete, error
 }
 
 struct ContentView: View {
@@ -23,6 +23,7 @@ struct ContentView: View {
     @State var showAlert = false
     @State var alertType: AlertType = .added
     @State var editingSearch = false
+    @State private var deleteIndex = 0
     
     var body: some View {
         ZStack(alignment: .top) {
@@ -38,9 +39,20 @@ struct ContentView: View {
                     ScrollView(.horizontal) {
                         HStack {
                             ForEach(self.store.locations, id: \.self) { location in
-                                Button(action: {self.moveToPin(location: location)}) {
-                                    LocationCell(location: location)
-                                }.buttonStyle(PlainButtonStyle())
+                                ZStack(alignment: .topTrailing) {
+                                    Button(action: {self.moveToPin(location: location)}) {
+                                        LocationCell(location: location)
+                                    }.buttonStyle(PlainButtonStyle())
+                                    
+                                    Button(action: {self.requestDeleteLocation(location: location)}) {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .resizable()
+                                            .frame(width: 20, height: 20)
+                                            .foregroundColor(.gray)
+                                            .padding(8)
+                                    }
+                                    
+                                } //END OF ZSTACK
                             }.padding(8)
                         }
                     }.padding(.horizontal, 4)
@@ -81,6 +93,11 @@ struct ContentView: View {
             switch alertType {
                 case .added: return Alert(title: Text("Location Added!"), message: Text(selectedPlace?.title ?? "Title Not Found"), dismissButton: .default(Text("Ok")))
                 case .duplicate: return Alert(title: Text("Location Already Exists"), dismissButton: .default(Text("Ok")))
+            case .delete: return Alert(title: Text("Are you sure you want to delete?"), primaryButton: .destructive(Text("Delete")){
+                self.store.locations.remove(at: self.deleteIndex)
+                print("Deleted")
+                }, secondaryButton: .cancel())
+            case .error: return Alert(title: Text("There was an Error"), dismissButton: .default(Text("Ok")))
             }
         } //END OF ALERT
             
@@ -116,11 +133,30 @@ struct ContentView: View {
             alertType = .duplicate
         } else {
             self.store.locations.append(location)
+            self.store.tempLocation = nil
             selectedPlace = location
             showAlert = true
             alertType = .added
         }
     }
+    
+    //Delete Location
+    func requestDeleteLocation(location: MKPointAnnotation) {
+        if let index = store.locations.firstIndex(of: location) {
+            deleteIndex = index
+            showAlert = true
+            alertType = .delete
+        } else {
+            showAlert = true
+            alertType = .error
+        }
+    }
+    
+    func confirmDeleteLocation() {
+//        if self.selectedPlace ==
+        self.store.locations.remove(at: self.deleteIndex)
+    }
+    
     
 }
 
