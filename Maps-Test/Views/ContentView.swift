@@ -10,16 +10,18 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
+enum AlertType {
+    case added, duplicate
+}
+
 struct ContentView: View {
     
     @EnvironmentObject var store: Store
     
-    @State var locations = [MKPointAnnotation]()
-    
     @State var searchAddress: String = ""
-    
     @State var selectedPlace: MKPointAnnotation?
-    @State var showingPlaceDetails = false
+    @State var showAlert = false
+    @State var alertType: AlertType = .added
     @State var editingSearch = false
     
     var body: some View {
@@ -74,9 +76,14 @@ struct ContentView: View {
             .padding(.horizontal)
         } //END OF Z
         //Show details from pin
-            .alert(isPresented: $showingPlaceDetails) {
-                Alert(title: Text("Location Added!"), message: Text(selectedPlace?.title ?? "Title Not Found"), dismissButton: .default(Text("Ok")))
-        }
+            
+        .alert(isPresented: $showAlert) {
+            switch alertType {
+                case .added: return Alert(title: Text("Location Added!"), message: Text(selectedPlace?.title ?? "Title Not Found"), dismissButton: .default(Text("Ok")))
+                case .duplicate: return Alert(title: Text("Location Already Exists"), dismissButton: .default(Text("Ok")))
+            }
+        } //END OF ALERT
+            
     }
     
     //Search for Address
@@ -104,10 +111,15 @@ struct ContentView: View {
     
     //Add location
     func addLocation(location: MKPointAnnotation) {
-        self.store.locations.append(location)
-        print("Added (2): \(location.title!)")
-        selectedPlace = location
-        showingPlaceDetails = true
+        if let _ = store.locations.firstIndex(of: location) {
+            showAlert = true
+            alertType = .duplicate
+        } else {
+            self.store.locations.append(location)
+            selectedPlace = location
+            showAlert = true
+            alertType = .added
+        }
     }
     
 }
